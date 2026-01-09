@@ -1,0 +1,253 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model School {
+  announcements    Announcement[]
+  attendances      Attendance[]
+  classes          ClassModel[]
+  configField      Json?
+  createdAt        DateTime                    @default(now())
+  feeStructures    FeeStructure[]
+  grades           Grade[]
+  id               String                      @id @default(cuid())
+  messages         Message[]
+  name             String?
+  subdomain        String?
+  subjects         Subject[]
+  subscriptionTier EnumSchoolSubscriptionTier?
+  transactions     Transaction[]
+  updatedAt        DateTime                    @updatedAt
+  users            User[]
+}
+
+model StudentProfile {
+  admissionNo       String?
+  classField        ClassModel? @relation(fields: [classFieldId], references: [id])
+  classFieldId      String?
+  createdAt         DateTime    @default(now())
+  dateOfBirth       DateTime?
+  emergencyContacts Json?
+  id                String      @id @default(cuid())
+  medicalInfo       Json?
+  rollNo            String?
+  updatedAt         DateTime    @updatedAt
+  user              User?       @relation(fields: [userId], references: [id])
+  userId            String?
+}
+
+model ClassModel {
+  academicYear    String?
+  attendances     Attendance[]
+  capacity        Int?
+  classTeacher    String?
+  createdAt       DateTime         @default(now())
+  id              String           @id @default(cuid())
+  name            String?
+  school          School?          @relation(fields: [schoolId], references: [id])
+  schoolId        String?
+  section         String?
+  studentProfiles StudentProfile[]
+  updatedAt       DateTime         @updatedAt
+}
+
+model Message {
+  attachmentUrl String?
+  content       String?
+  createdAt     DateTime              @default(now())
+  id            String                @id @default(cuid())
+  read          Boolean?
+  readAt        DateTime?
+  recipient     String?
+  school        School?               @relation(fields: [schoolId], references: [id])
+  schoolId      String?
+  sender        String?
+  typeField     EnumMessageTypeField?
+  updatedAt     DateTime              @updatedAt
+}
+
+model FeeStructure {
+  amount             Float?
+  applicableClassIds Json?
+  category           EnumFeeStructureCategory?
+  createdAt          DateTime                  @default(now())
+  dueDates           Json?
+  id                 String                    @id @default(cuid())
+  installmentCount   Int?
+  name               String?
+  school             School?                   @relation(fields: [schoolId], references: [id])
+  schoolId           String?
+  transactions       Transaction[]
+  updatedAt          DateTime                  @updatedAt
+}
+
+model Transaction {
+  amount               Float?
+  createdAt            DateTime                      @default(now())
+  feeStructure         FeeStructure?                 @relation(fields: [feeStructureId], references: [id])
+  feeStructureId       String?
+  gateway              EnumTransactionGateway?
+  gatewayTransactionId String?
+  id                   String                        @id @default(cuid())
+  paymentMethod        EnumTransactionPaymentMethod?
+  receiptUrl           String?
+  school               School?                       @relation(fields: [schoolId], references: [id])
+  schoolId             String?
+  status               EnumTransactionStatus?
+  student              String?
+  updatedAt            DateTime                      @updatedAt
+}
+
+model Announcement {
+  attachments Json?
+  audience    EnumAnnouncementAudience?
+  classIds    Json?
+  content     String?
+  createdAt   DateTime                  @default(now())
+  id          String                    @id @default(cuid())
+  priority    EnumAnnouncementPriority?
+  school      School?                   @relation(fields: [schoolId], references: [id])
+  schoolId    String?
+  title       String?
+  updatedAt   DateTime                  @updatedAt
+}
+
+model TeacherProfile {
+  createdAt      DateTime  @default(now())
+  employeeId     String?
+  id             String    @id @default(cuid())
+  joiningDate    DateTime?
+  qualifications String?
+  subjectsTaught Json?
+  updatedAt      DateTime  @updatedAt
+  user           User?     @relation(fields: [userId], references: [id])
+  userId         String?
+}
+
+model Grade {
+  assessmentType EnumGradeAssessmentType?
+  comments       String?
+  createdAt      DateTime                 @default(now())
+  grade          String?
+  id             String                   @id @default(cuid())
+  maxScore       Float?
+  published      Boolean?
+  school         School?                  @relation(fields: [schoolId], references: [id])
+  schoolId       String?
+  score          Float?
+  student        String?
+  subject        Subject?                 @relation(fields: [subjectId], references: [id])
+  subjectId      String?
+  updatedAt      DateTime                 @updatedAt
+}
+
+model ParentProfile {
+  children   Json?
+  createdAt  DateTime @default(now())
+  id         String   @id @default(cuid())
+  occupation String?
+  updatedAt  DateTime @updatedAt
+  user       User?    @relation(fields: [userId], references: [id])
+  userId     String?
+}
+
+model Subject {
+  code      String?
+  createdAt DateTime @default(now())
+  grades    Grade[]
+  id        String   @id @default(cuid())
+  name      String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+  schoolId  String?
+  teacher   String?
+  updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  classField   ClassModel?            @relation(fields: [classFieldId], references: [id])
+  classFieldId String?
+  createdAt    DateTime               @default(now())
+  date         DateTime?
+  id           String                 @id @default(cuid())
+  markedBy     String?
+  school       School?                @relation(fields: [schoolId], references: [id])
+  schoolId     String?
+  session      EnumAttendanceSession?
+  status       EnumAttendanceStatus?
+  student      String?
+  updatedAt    DateTime               @updatedAt
+}
+
+model User {
+  createdAt       DateTime         @default(now())
+  email           String?          @unique
+  firstName       String?
+  id              String           @id @default(cuid())
+  isActive        Boolean?
+  lastLogin       DateTime?
+  lastName        String?
+  parentProfiles  ParentProfile[]
+  password        String
+  passwordHash    String?
+  role            EnumUserRole?
+  roles           Json
+  school          School?          @relation(fields: [schoolId], references: [id])
+  schoolId        String?
+  studentProfiles StudentProfile[]
+  teacherProfiles TeacherProfile[]
+  updatedAt       DateTime         @updatedAt
+  username        String           @unique
+}
+
+enum EnumSchoolSubscriptionTier {
+  Option1
+}
+
+enum EnumMessageTypeField {
+  Option1
+}
+
+enum EnumFeeStructureCategory {
+  Option1
+}
+
+enum EnumTransactionGateway {
+  Option1
+}
+
+enum EnumTransactionPaymentMethod {
+  Option1
+}
+
+enum EnumTransactionStatus {
+  Option1
+}
+
+enum EnumAnnouncementAudience {
+  Option1
+}
+
+enum EnumAnnouncementPriority {
+  Option1
+}
+
+enum EnumGradeAssessmentType {
+  Option1
+}
+
+enum EnumAttendanceSession {
+  Option1
+}
+
+enum EnumAttendanceStatus {
+  Option1
+}
+
+enum EnumUserRole {
+  Option1
+}
